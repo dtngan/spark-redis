@@ -19,6 +19,7 @@ class KeysStandaloneSuite extends FunSuite with Keys with ENV with BeforeAndAfte
       .set("redis.port", "6379")
       .set("redis.auth", "passwd")
     )
+    sc.setLogLevel("WARN")
     content = fromInputStream(getClass.getClassLoader.getResourceAsStream("blog")).
       getLines.toArray.mkString("\n")
 

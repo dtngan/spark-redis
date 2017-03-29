@@ -16,6 +16,7 @@ class RedisRDDStandaloneSuite extends FunSuite with ENV with BeforeAndAfterAll w
       .set("redis.port", "6379")
       .set("redis.auth", "passwd")
     )
+    sc.setLogLevel("WARN")
     content = fromInputStream(getClass.getClassLoader.getResourceAsStream("blog")).
       getLines.toArray.mkString("\n")
 

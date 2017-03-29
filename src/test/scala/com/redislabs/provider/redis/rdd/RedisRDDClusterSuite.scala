@@ -15,6 +15,7 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
       .set("redis.host", "127.0.0.1")
       .set("redis.port", "7379")
     )
+    sc.setLogLevel("WARN")
     content = fromInputStream(getClass.getClassLoader.getResourceAsStream("blog")).
       getLines.toArray.mkString("\n")
 

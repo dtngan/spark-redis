@@ -16,6 +16,7 @@ class RedisSparkSQLClusterSuite extends FunSuite with ENV with BeforeAndAfterAll
       .set("redis.host", "127.0.0.1")
       .set("redis.port", "7379")
     )
+    sc.setLogLevel("WARN")
     redisConfig = new RedisConfig(new RedisEndpoint("127.0.0.1", 7379))
 
     // Flush all the hosts

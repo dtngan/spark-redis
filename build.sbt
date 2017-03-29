@@ -26,7 +26,10 @@ organizationHomepage := Some(url("https://redislabs.com"))
 // Add Spark components this package depends on, e.g, "mllib", ....
 sparkComponents ++= Seq("sql", "streaming")
 
-libraryDependencies ++= Seq( "redis.clients" % "jedis" % "2.7.2")
+libraryDependencies ++= Seq(
+	"redis.clients" % "jedis" % "2.7.2",
+	"org.scalatest" % "scalatest_2.10" % "2.2.1" % "test"
+)
 
 // uncomment and change the value below to change the directory where your zip artifact will be created
 // spDistDirectory := target.value
@@ -35,3 +38,6 @@ libraryDependencies ++= Seq( "redis.clients" % "jedis" % "2.7.2")
 // e.g. spDependencies += "databricks/spark-avro:0.1"
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials") // A file containing credentials
+
+// super important with multiple tests running spark Contexts
+parallelExecution in Test := false
