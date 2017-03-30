@@ -278,6 +278,42 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
                       (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     vs.foreachPartition(partition => setFixedList(listName, listSize, partition, redisConfig))
   }
+
+  /**
+    * @param vs      RDD of values
+    * @param setName target set's name which hold the vs to remove
+    * @param ttl     time to live
+    */
+  def redisSrem(vs: RDD[String], setName: String, ttl: Int = 0)
+                (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
+    vs.foreachPartition(partition => {
+      val conn = redisConfig.connectionForKey(setName)
+      val pipeline = conn.pipelined
+      partition.foreach(pipeline.srem(setName, _))
+      if (ttl > 0) pipeline.expire(setName, ttl)
+      pipeline.sync
+      conn.close
+    })
+  }
+
+
+  /**
+    * @param fields   RDD of fieldnames
+    * @param hashName target hash's name which hold the fields to remove
+    * @param ttl      time to live
+    */
+  def redisHdel(fields: RDD[String], hashName: String, ttl: Int = 0)
+                (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
+    fields.foreachPartition(partition => {
+      val conn = redisConfig.connectionForKey(hashName)
+      val pipeline = conn.pipelined
+      partition.foreach(pipeline.hdel(hashName, _))
+      if (ttl > 0) pipeline.expire(hashName, ttl)
+      pipeline.sync
+      conn.close
+    })
+  }
+
 }
 
 

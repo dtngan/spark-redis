@@ -137,6 +137,33 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
     hashContents should be (wcnts)
   }
 
+  test("RedisHashRDD - Remove fields from hash - default(cluster)") {
+    val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
+      reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
+    val wcntsToRemove = wcnts.filter(_._2 < 4)
+    val fieldsToRemove = wcntsToRemove.map(_._1)
+    sc.redisHdel(fieldsToRemove, "all:words:cnt:hash")
+
+    val redisHashRDD = sc.fromRedisHash("all:words:cnt:hash")
+    val hashContents = redisHashRDD.map(x => (x._1, x._2.toInt)).sortByKey().collect
+    val filteredWcnts = wcnts.subtract(wcntsToRemove).sortByKey().collect
+    hashContents should be (filteredWcnts)
+  }
+
+  test("RedisHashRDD - Remove fields from hash - cluster") {
+    implicit val c: RedisConfig = redisConfig
+    val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
+      reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
+    val wcntsToRemove = wcnts.filter(_._2 < 6)
+    val fieldsToRemove = wcntsToRemove.map(_._1)
+    sc.redisHdel(fieldsToRemove, "all:words:cnt:hash")
+
+    val redisHashRDD = sc.fromRedisHash("all:words:cnt:hash")
+    val hashContents = redisHashRDD.map(x => (x._1, x._2.toInt)).sortByKey().collect
+    val filteredWcnts = wcnts.subtract(wcntsToRemove).sortByKey().collect
+    hashContents should be (filteredWcnts)
+  }
+
   test("RedisListRDD - default(cluster)") {
     val redisListRDD = sc.fromRedisList( "all:words:list")
     val listContents = redisListRDD.sortBy(x => x).collect
@@ -165,6 +192,31 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
     val setContents = redisSetRDD.sortBy(x => x).collect
     val ws = content.split("\\W+").filter(!_.isEmpty).distinct.sorted
     setContents should be (ws)
+  }
+
+  test("RedisSetRDD - Remove elements from set - default(cluster)") {
+    val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
+      reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
+    val wordsToRemove = wcnts.filter(_._2 < 4).map(_._1)
+    sc.redisSrem(wordsToRemove, "all:words:set")
+
+    val redisSetRDD = sc.fromRedisSet("all:words:set")
+    val setContents = redisSetRDD.sortBy(x => x).collect
+    val filteredWs = wcnts.map(_._1).subtract(wordsToRemove).sortBy(x => x).collect
+    setContents should be (filteredWs)
+  }
+
+  test("RedisSetRDD - Remove elements from set - cluster") {
+    implicit val c: RedisConfig = redisConfig
+    val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
+      reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
+    val wordsToRemove = wcnts.filter(_._2 < 6).map(_._1)
+    sc.redisSrem(wordsToRemove, "all:words:set")
+
+    val redisSetRDD = sc.fromRedisSet("all:words:set")
+    val setContents = redisSetRDD.sortBy(x => x).collect
+    val filteredWs = wcnts.map(_._1).subtract(wordsToRemove).sortBy(x => x).collect
+    setContents should be (filteredWs)
   }
 
   test("Expire - default(cluster)") {
