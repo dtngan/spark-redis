@@ -284,7 +284,7 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param setName target set's name which hold the vs to remove
     * @param ttl     time to live
     */
-  def redisSrem(vs: RDD[String], setName: String, ttl: Int = 0)
+  def redisSREM(vs: RDD[String], setName: String, ttl: Int = 0)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     vs.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(setName)
@@ -302,7 +302,7 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param hashName target hash's name which hold the fields to remove
     * @param ttl      time to live
     */
-  def redisHdel(fields: RDD[String], hashName: String, ttl: Int = 0)
+  def redisHDEL(fields: RDD[String], hashName: String, ttl: Int = 0)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     fields.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(hashName)
@@ -312,6 +312,16 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
       pipeline.sync
       conn.close
     })
+  }
+
+  def redisHGET(hashName: String, field: String, ttl: Int = 0)
+                (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))):
+  String = {
+    val conn = redisConfig.connectionForKey(hashName)
+    val value = conn.hget(hashName, field)
+    conn.close
+
+    value
   }
 
 }
