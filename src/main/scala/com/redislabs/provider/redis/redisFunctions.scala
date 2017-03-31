@@ -284,13 +284,12 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param setName target set's name which hold the vs to remove
     * @param ttl     time to live
     */
-  def redisSREM(vs: RDD[String], setName: String, ttl: Int = 0)
+  def redisSREM(vs: RDD[String], setName: String)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     vs.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(setName)
       val pipeline = conn.pipelined
       partition.foreach(pipeline.srem(setName, _))
-      if (ttl > 0) pipeline.expire(setName, ttl)
       pipeline.sync
       conn.close
     })
@@ -302,19 +301,18 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param hashName target hash's name which hold the fields to remove
     * @param ttl      time to live
     */
-  def redisHDEL(fields: RDD[String], hashName: String, ttl: Int = 0)
+  def redisHDEL(fields: RDD[String], hashName: String)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     fields.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(hashName)
       val pipeline = conn.pipelined
       partition.foreach(pipeline.hdel(hashName, _))
-      if (ttl > 0) pipeline.expire(hashName, ttl)
       pipeline.sync
       conn.close
     })
   }
 
-  def redisHGET(hashName: String, field: String, ttl: Int = 0)
+  def redisHGET(hashName: String, field: String)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))):
   String = {
     val conn = redisConfig.connectionForKey(hashName)
@@ -323,6 +321,24 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
 
     value
   }
+
+
+  /**
+    * @param hashName target hash's name which hold the fields read
+    * @param fields RDD of fieldnames
+    * @param partitionNum number of partitions
+    * @return RedisHashRDD of related Key-Values stored in redis server
+    */
+  def redisHMGET(hashName: String, fields: RDD[String])
+                      (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))):
+  RDD[(String, String)] = {
+    // fromRedisKeyPattern(hashName, partitionNum)(redisConfig).getHash
+    val conn = redisConfig.connectionForKey(hashName)
+    import scala.collection.JavaConverters._
+    val values = conn.hmget(hashName, fields.collect: _*).asScala
+    fields.zip(sc.parallelize(values))
+  }
+
 
 }
 

@@ -151,26 +151,57 @@ class RedisRDDStandaloneSuite extends FunSuite with ENV with BeforeAndAfterAll w
     value should be ("belle")
   }
 
-  test("RedisHashRDD - default(cluster) - hget: Key does not exist") {
+  test("RedisHashRDD - default(standalone) - hget: Key does not exist") {
     val value = sc.redisHGET("test:hash:null", "beautiful")
     value should be (null)
   }
 
-  test("RedisHashRDD - cluster - hget: Key does not exist") {
+  test("RedisHashRDD - standalone - hget: Key does not exist") {
     implicit val c: RedisConfig = redisConfig
     val value = sc.redisHGET("test:hash:null", "beautiful")
     value should be (null)
   }
 
-  test("RedisHashRDD - default(cluster) - hget: Field does not exist") {
+  test("RedisHashRDD - default(standalone) - hget: Field does not exist") {
     val value = sc.redisHGET("test:hash:standalone", "difficult")
     value should be (null)
   }
 
-  test("RedisHashRDD - cluster - hget: Field does not exist") {
+  test("RedisHashRDD - standalone - hget: Field does not exist") {
     implicit val c: RedisConfig = redisConfig
     val value = sc.redisHGET("test:hash:standalone", "difficult")
     value should be (null)
+  }
+
+  test("RedisHashRDD - default(standalone) - hmget") {
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:standalone", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - standalone - hmget") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:standalone", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - default(standalone) - hmget: key does not exist") {
+
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - standalone - hmget: key does not exist") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
   }
 
 

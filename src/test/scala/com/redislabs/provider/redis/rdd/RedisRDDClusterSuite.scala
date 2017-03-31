@@ -173,6 +173,37 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
     value should be (null)
   }
 
+  test("RedisHashRDD - default(cluster) - hmget") {
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:cluster", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - cluster - hmget") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:cluster", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - default(cluster) - hmget: key does not exist") {
+
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - cluster - hmget: key does not exist") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGET("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
+  }
+
   test("RedisHashRDD - default(cluster) - Remove fields from hash") {
     val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
       reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
