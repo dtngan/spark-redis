@@ -204,6 +204,36 @@ class RedisRDDStandaloneSuite extends FunSuite with ENV with BeforeAndAfterAll w
     values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
   }
 
+  test("RedisHashRDD - default(standalone) - hmget in parallel") {
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGETParallel("test:hash:standalone", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - standalone - hmget in parallel") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGETParallel("test:hash:standalone", fieldRDD).collect.sorted
+
+    values should be (Array(("life", "la_vie"), ("is", "est"), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - default(standalone) - hmget in parallel: key does not exist") {
+
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGETParallel("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
+  }
+
+  test("RedisHashRDD - standalone - hmget in parallel: key does not exist") {
+    implicit val c: RedisConfig = redisConfig
+    val fieldRDD = sc.parallelize("life is difficult".split(" "))
+    val values = sc.redisHMGETParallel("test:hash:null", fieldRDD).collect.sorted
+
+    values should be (Array(("life", null), ("is", null), ("difficult", null)).sortBy(_._1))
+  }
 
   test("RedisHashRDD - default(standalone) - Remove fields from hash") {
     val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).

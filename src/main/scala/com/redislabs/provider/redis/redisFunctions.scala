@@ -322,11 +322,9 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     value
   }
 
-
   /**
     * @param hashName target hash's name which hold the fields read
     * @param fields RDD of fieldnames
-    * @param partitionNum number of partitions
     * @return RedisHashRDD of related Key-Values stored in redis server
     */
   def redisHMGET(hashName: String, fields: RDD[String])
@@ -339,7 +337,16 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     fields.zip(sc.parallelize(values))
   }
 
-
+  /**
+    * @param hashName target hash's name which hold the fields read
+    * @param fields RDD of fieldnames
+    * @return RedisHashRDD of related Key-Values stored in redis server
+    */
+  def redisHMGETParallel(hashName: String, fields: RDD[String])
+                      (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))):
+  RDD[(String, String)] = {
+    fields.map(field => (field, redisHGET(hashName, field)))
+  }
 }
 
 
