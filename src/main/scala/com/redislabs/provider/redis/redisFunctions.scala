@@ -284,7 +284,7 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param setName target set's name which hold the vs to remove
     * @param ttl     time to live
     */
-  def redisSREM(vs: RDD[String], setName: String)
+  def redisSREM(setName: String, vs: RDD[String])
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     vs.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(setName)

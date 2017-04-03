@@ -296,7 +296,7 @@ class RedisRDDStandaloneSuite extends FunSuite with ENV with BeforeAndAfterAll w
     val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
       reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
     val wordsToRemove = wcnts.filter(_._2 < 4).map(_._1)
-    sc.redisSREM(wordsToRemove, "all:words:set")
+    sc.redisSREM("all:words:set", wordsToRemove)
 
     val redisSetRDD = sc.fromRedisSet("all:words:set")
     val setContents = redisSetRDD.sortBy(x => x).collect
@@ -309,7 +309,7 @@ class RedisRDDStandaloneSuite extends FunSuite with ENV with BeforeAndAfterAll w
     val wcnts = sc.parallelize(content.split("\\W+").filter(!_.isEmpty)).map((_, 1)).
       reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
     val wordsToRemove = wcnts.filter(_._2 < 6).map(_._1)
-    sc.redisSREM(wordsToRemove, "all:words:set")
+    sc.redisSREM("all:words:set", wordsToRemove)
 
     val redisSetRDD = sc.fromRedisSet("all:words:set")
     val setContents = redisSetRDD.sortBy(x => x).collect
