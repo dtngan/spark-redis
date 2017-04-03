@@ -240,7 +240,7 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
       reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
     val wcntsToRemove = wcnts.filter(_._2 < 4)
     val fieldsToRemove = wcntsToRemove.map(_._1)
-    sc.redisHDEL(fieldsToRemove, "all:words:cnt:hash")
+    sc.redisHDEL("all:words:cnt:hash", fieldsToRemove)
 
     val redisHashRDD = sc.fromRedisHash("all:words:cnt:hash")
     val hashContents = redisHashRDD.map(x => (x._1, x._2.toInt)).sortByKey().collect
@@ -254,7 +254,7 @@ class RedisRDDClusterSuite extends FunSuite with ENV with BeforeAndAfterAll with
       reduceByKey(_ + _).map(x => (x._1, x._2.toInt))
     val wcntsToRemove = wcnts.filter(_._2 < 6)
     val fieldsToRemove = wcntsToRemove.map(_._1)
-    sc.redisHDEL(fieldsToRemove, "all:words:cnt:hash")
+    sc.redisHDEL("all:words:cnt:hash", fieldsToRemove)
 
     val redisHashRDD = sc.fromRedisHash("all:words:cnt:hash")
     val hashContents = redisHashRDD.map(x => (x._1, x._2.toInt)).sortByKey().collect

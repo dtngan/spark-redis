@@ -301,7 +301,7 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     * @param hashName target hash's name which hold the fields to remove
     * @param ttl      time to live
     */
-  def redisHDEL(fields: RDD[String], hashName: String)
+  def redisHDEL(hashName: String, fields: RDD[String])
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))) {
     fields.foreachPartition(partition => {
       val conn = redisConfig.connectionForKey(hashName)
@@ -311,6 +311,7 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
       conn.close
     })
   }
+
 
   def redisHGET(hashName: String, field: String)
                 (implicit redisConfig: RedisConfig = new RedisConfig(new RedisEndpoint(sc.getConf))):
