@@ -334,8 +334,11 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     // fromRedisKeyPattern(hashName, partitionNum)(redisConfig).getHash
     val conn = redisConfig.connectionForKey(hashName)
     import scala.collection.JavaConverters._
-    val values = conn.hmget(hashName, fields.collect: _*).asScala
-    fields.zip(sc.parallelize(values))
+    val values = conn.hmget(hashName, fields.collect: _*)
+      .asScala
+    val valuesRDD = sc.parallelize(values).zipWithIndex.map(r => (r._2, r._1))
+    fields.zipWithIndex
+      .map(r => (r._2, r._1)).join(valuesRDD).map(_._2)
   }
 
   /**
